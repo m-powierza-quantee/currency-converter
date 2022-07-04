@@ -1,0 +1,22 @@
+<html>
+  <head>
+    <style>
+      div {
+        margin: 1rem;
+      }
+    </style>
+  </head>
+
+  <body>
+    <h1>Currency converter</h1>
+    <form method="POST" action="/login">
+      {{ form.hidden_tag() }}
+      <div>{{ form.date.label }}: {{ form.date() }}</div>
+
+      <div>{{ form.input_value() }} {{ form.currency_from() }} as {{ form.currency_to() }}</div>
+      {% if output_value and output_currency %}<div>{{ output }} {{ output_currency }}</div>{% endif %}      
+
+      <div>{{ form.submit() }}</div>
+    </form>
+  </body>
+</html>
