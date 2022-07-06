@@ -1,4 +1,4 @@
 from app import app
 
 
-app.run(port='5002')
+app.run(port="5002")

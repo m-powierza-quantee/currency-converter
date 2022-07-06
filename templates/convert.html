@@ -4,19 +4,50 @@
       div {
         margin: 1rem;
       }
+
+      .error {
+        color: red;
+      }
     </style>
   </head>
 
   <body>
     <h1>Currency converter</h1>
-    <form method="POST" action="/login">
+
+    {% if errors %}
+      {% for error in errors %}
+        <p class="error">{{ error }}</p>
+      {% endfor %}
+    {% endif %}
+
+    <form method="POST" action="/">
       {{ form.hidden_tag() }}
       <div>{{ form.date.label }}: {{ form.date() }}</div>
+      {% for error in form.date.errors %}
+        <p class="error">{{ error }}</span>
+      {% endfor %}
 
       <div>{{ form.input_value() }} {{ form.currency_from() }} as {{ form.currency_to() }}</div>
-      {% if output_value and output_currency %}<div>{{ output }} {{ output_currency }}</div>{% endif %}      
+      {% for error in form.input_value.errors %}
+        <p class="error">{{ error }}</span>
+      {% endfor %}
+      {% for error in form.currency_from.errors %}
+        <p class="error">{{ error }}</span>
+      {% endfor %}
+      {% for error in form.currency_to.errors %}
+        <p class="error">{{ error }}</span>
+      {% endfor %}
+
+      {% if output_value and output_currency %}<div>{{ output_value }} {{ output_currency }}</div>{% endif %}      
 
       <div>{{ form.submit() }}</div>
     </form>
+
+    Cached days:
+    <ul>
+      {% for table in rates_tables %}
+        <li>{{ table.date }}</li>
+      {% endfor %}
+    </ul>
   </body>
 </html>

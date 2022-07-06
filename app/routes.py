@@ -1,31 +1,44 @@
-from flask import render_template
-import requests
-from bs4 import BeautifulSoup
-import re
+from flask import render_template, request, redirect
 
 from app import app
 from app.forms import ConvertForm
+from app.utils import currencies, query_nbp_rates, convert_value
+from app.models import RatesTable
 
 
-@app.route('/')
+@app.route("/", methods=["GET", "POST"])
 def index():
-  form = ConvertForm()
+    form = ConvertForm(request.form)
 
-  return render_template('convert.html', form=form)
+    if request.method == "POST" and form.validate():
+        rates_table = query_nbp_rates(form.date.data)
 
+        if rates_table is None:
+            return render_template(
+                "convert.html",
+                form=form,
+                errors=[f"No data for {form.date.data}."],
+                rates_tables=RatesTable.query.all(),
+            )
 
-@app.route('/test')
-def test():
-  # nbp_url = 'https://www.nbp.pl/transfer.aspx?c=/ascx/ListABCH.ascx&Typ=a&p=rok;mies&navid=archa'
-  year = '22'
-  month = '06'
-  day = '01'
-  # nbp_url = f'https://www.nbp.pl/kursy/xml/a127z220704.xml'
-  month_table_url = 'https://www.nbp.pl/transfer.aspx?c=/ascx/ListABCH.ascx&Typ=a&p=rok;mies&navid=archa'
-  # nbp_url = f'https://www.nbp.pl/kursy/xml/a127z{year}{month}{day}.xml'
-  res = requests.post(month_table_url, data={ 'mies': month, 'rok': year })
-  html = BeautifulSoup(res.text, 'html.parser')
+        output_value = convert_value(
+            form.input_value.data,
+            form.currency_from.data,
+            form.currency_to.data,
+            rates_table,
+        )
+        output_value = f"{output_value:.2f}"
 
-  ul = html.find("ul", class_="archl").find(string=re.compile(f'z dnia 20{year}-{month}-{day}'))
+        rates_tables = RatesTable.query.all()
 
-  return ''.join(str(link) for link in ul)
+        return render_template(
+            "convert.html",
+            form=form,
+            output_value=output_value,
+            output_currency=form.currency_to.data,
+            rates_tables=RatesTable.query.all(),
+        )
+
+    return render_template(
+        "convert.html", form=form, rates_tables=RatesTable.query.all()
+    )
